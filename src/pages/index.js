@@ -1,60 +1,119 @@
-import { useState, useEffect } from 'react';
+// Ajout de useRef dans les imports
+import { useState, useEffect, useRef } from 'react';
 import DrawingBoard from '@/components/DrawingBoard';
 import alphabetData from '../../data/alphabet.json'; 
 
 export default function Home() {
+  const [vueActuelle, setVueActuelle] = useState('grille');
+  const [lettreCible, setLettreCible] = useState(null);
+
   const [lettreActuelle, setLettreActuelle] = useState(null);
   const [formeActuelle, setFormeActuelle] = useState('isolee');
-  const [mode, setMode] = useState('calque'); // Deux modes possibles : 'calque' ou 'test'.
-  const [revelerSolution, setRevelerSolution] = useState(false); // Gère l'affichage de la solution en mode Test.
+  const [mode, setMode] = useState('calque');
+  const [revelerSolution, setRevelerSolution] = useState(false);
 
-  // Initialisation au premier chargement de la page.
-  useEffect(() => {
-    choisirNouvelExercice();
-  }, []);
+  // Création de la référence pour piloter le DrawingBoard
+  const drawingBoardRef = useRef(null);
 
-  // Sélectionne une combinaison aléatoire d'une lettre et d'une position.
-  const choisirNouvelExercice = () => {
-    const formesPossibles = ['isolee', 'initiale', 'mediane', 'finale'];
-    
-    // Si aucune lettre n'est chargée (initialisation)
-    if (!lettreActuelle) {
-      const indexAleatoire = Math.floor(Math.random() * alphabetData.length);
-      const formeAleatoire = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
-      setLettreActuelle(alphabetData[indexAleatoire]);
-      setFormeActuelle(formeAleatoire);
-      setRevelerSolution(false);
-      return;
-    }
-
-    // Boucle de sécurité pour s'assurer de ne pas tomber sur le même exercice d'affilée.
-    let nouvelleLettre;
-    let nouvelleForme;
-    do {
-      const indexAleatoire = Math.floor(Math.random() * alphabetData.length);
-      nouvelleLettre = alphabetData[indexAleatoire];
-      nouvelleForme = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
-    } while (
-      nouvelleLettre.id === lettreActuelle.id && 
-      nouvelleForme === formeActuelle && 
-      alphabetData.length > 1
-    );
-
-    setLettreActuelle(nouvelleLettre);
-    setFormeActuelle(nouvelleForme);
-    setRevelerSolution(false); // On réinitialise la solution pour le nouvel exercice.
+  const demarrerExercice = (lettre = null) => {
+    setLettreCible(lettre);
+    setVueActuelle('exercice');
+    genererProchainExercice(lettre);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 flex flex-col items-center">
-      <header className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Apprentissage de l'Arabe</h1>
-        <p className="text-gray-500 mt-2">Maîtrise l'alphabet et ses différentes formes</p>
-      </header>
+  const genererProchainExercice = (lettreForcee = null) => {
+    const formesPossibles = ['isolee', 'initiale', 'mediane', 'finale'];
+    setRevelerSolution(false); 
+
+    const lettreDeBase = lettreForcee || lettreCible;
+
+    if (lettreDeBase) {
+      let nouvelleForme;
+      if (lettreActuelle && lettreActuelle.id === lettreDeBase.id) {
+        do {
+          nouvelleForme = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
+        } while (nouvelleForme === formeActuelle);
+      } else {
+        nouvelleForme = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
+      }
+      setLettreActuelle(lettreDeBase);
+      setFormeActuelle(nouvelleForme);
       
+    } else {
+      let nouvelleLettre;
+      let nouvelleForme;
+
+      if (!lettreActuelle) {
+        nouvelleLettre = alphabetData[Math.floor(Math.random() * alphabetData.length)];
+        nouvelleForme = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
+      } else {
+        do {
+          nouvelleLettre = alphabetData[Math.floor(Math.random() * alphabetData.length)];
+          nouvelleForme = formesPossibles[Math.floor(Math.random() * formesPossibles.length)];
+        } while (nouvelleLettre.id === lettreActuelle.id && nouvelleForme === formeActuelle);
+      }
+      setLettreActuelle(nouvelleLettre);
+      setFormeActuelle(nouvelleForme);
+    }
+  };
+
+  // Fonction pour déclencher l'effacement depuis le parent
+  const handleEffacer = () => {
+    if (drawingBoardRef.current) {
+      drawingBoardRef.current.clearCanvas();
+    }
+  };
+
+  if (vueActuelle === 'grille') {
+    return (
+      <div className="min-h-screen bg-gray-50 py-10 px-4 flex flex-col items-center">
+        <header className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-800">Apprentissage de l'Arabe</h1>
+          <p className="text-gray-500 mt-2">Choisis une lettre ou lance le mode aléatoire</p>
+        </header>
+
+        <button 
+          onClick={() => demarrerExercice(null)}
+          className="mb-8 px-8 py-4 bg-emerald-600 text-white text-lg font-bold rounded-xl shadow-md hover:bg-emerald-700 transition-colors active:scale-95 w-full max-w-md"
+        >
+          Mode Aléatoire (Tout l'alphabet)
+        </button>
+
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 gap-4 w-full max-w-3xl" dir="rtl">
+          {alphabetData.map((lettre) => (
+            <button
+              key={lettre.id}
+              onClick={() => demarrerExercice(lettre)}
+              className="aspect-square flex flex-col items-center justify-center bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:border-blue-500 hover:shadow-md transition-all active:scale-95"
+            >
+              <span className="text-4xl text-gray-800 mb-2">{lettre.formes.isolee}</span>
+              <span className="text-xs text-gray-500 font-medium">{lettre.nom}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-6 px-4 flex flex-col items-center">
+      
+      <div className="w-full max-w-lg mb-6 flex justify-between items-center">
+        <button 
+          onClick={() => setVueActuelle('grille')}
+          className="text-gray-500 hover:text-gray-800 font-semibold flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          ← Retour à la grille
+        </button>
+        {lettreCible && (
+          <span className="text-xs font-bold bg-blue-100 text-blue-800 px-3 py-1 rounded-full shadow-sm">
+            Focus : {lettreCible.nom}
+          </span>
+        )}
+      </div>
+
       <main className="w-full flex flex-col items-center gap-6">
         
-        {/* INTERFACE : SÉLECTEUR DE MODE (ONGLETS PENSÉS POUR TABLETTE) */}
         <div className="flex bg-gray-200 p-1 rounded-xl shadow-inner w-full max-w-xs">
           <button
             onClick={() => setMode('calque')}
@@ -77,7 +136,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* INTERFACE : CONSIGNE D'EXERCICE */}
         {lettreActuelle && (
           <div className="text-center bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-100 min-w-[220px]">
             <h2 className="text-xl font-semibold text-gray-700">
@@ -89,57 +147,56 @@ export default function Home() {
           </div>
         )}
 
-        {/* ZONE DU COMPOSANT CANVAS + FILIGRANE */}
-        <div className="relative w-full max-w-lg mx-auto">
-          
-          {/* LOGIQUE DU CALQUE VISUEL :
-            La lettre s'affiche si on est en mode 'calque' OU si on a cliqué sur 'Vérifier' (revelerSolution).
-            Si la solution est révélée en mode test, elle s'affiche en vert pour bien contraster avec ton tracé.
-          */}
-          {lettreActuelle && (
-            <div 
-              className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
-                mode === 'calque' || revelerSolution ? 'opacity-25' : 'opacity-0'
-              }`}
-            >
-              <span 
-                className={`transition-colors duration-300 ${
-                  revelerSolution && mode === 'test' ? 'text-green-600 font-bold' : 'text-[#1f2937]'
-                }`} 
-                style={{ fontSize: '180px', lineHeight: '1' }}
-                dir="rtl"
+        <div className="w-full max-w-lg mx-auto">
+          {/* On passe la référence au DrawingBoard ici */}
+          <DrawingBoard ref={drawingBoardRef} key={`${lettreActuelle?.id}-${formeActuelle}-${mode}`}>
+            {lettreActuelle && (
+              <div 
+                className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${
+                  mode === 'calque' ? 'opacity-25' : revelerSolution ? 'opacity-60' : 'opacity-0'
+                }`}
               >
-                {lettreActuelle.formes[formeActuelle]}
-              </span>
-            </div>
-          )}
-          
-          {/* Utilisation de key pour forcer le rechargement du composant DrawingBoard à chaque nouvel exercice.
-          */}
-          <DrawingBoard key={`${lettreActuelle?.id}-${formeActuelle}-${mode}`} />
+                <span 
+                  className={`pb-10 ${revelerSolution && mode === 'test' ? 'text-green-500 font-bold' : 'text-[#1f2937]'}`} 
+                  style={{ fontSize: '180px', lineHeight: '1' }}
+                  dir="rtl"
+                >
+                  {lettreActuelle.formes[formeActuelle]}
+                </span>
+              </div>
+            )}
+          </DrawingBoard>
         </div>
 
-        {/* INTERFACE : BOUTONS DE CONTRÔLE DE JEU */}
-        <div className="flex gap-4 w-full max-w-lg justify-center">
-          {/* Le bouton vérifier ne s'affiche qu'en mode test et si la solution n'est pas encore dévoilée */}
+        {/* LIGNE DES 3 BOUTONS (Effacer, Vérifier, Suivant) */}
+        <div className="flex gap-3 w-full max-w-lg justify-between">
+          
+          <button 
+            onClick={handleEffacer}
+            className="flex-1 py-3 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold shadow-sm hover:bg-red-100 transition-colors active:scale-95 text-sm sm:text-base"
+          >
+            Effacer
+          </button>
+
           {mode === 'test' && !revelerSolution && (
             <button 
               onClick={() => setRevelerSolution(true)}
-              className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-lg shadow-md hover:bg-emerald-700 transition-colors active:scale-95"
+              className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-lg shadow-md hover:bg-emerald-700 transition-colors active:scale-95 text-sm sm:text-base"
             >
               Vérifier
             </button>
           )}
           
           <button 
-            onClick={choisirNouvelExercice}
-            className={`px-6 py-3 text-white font-bold rounded-lg shadow-md transition-colors active:scale-95 ${
-              mode === 'test' && !revelerSolution ? 'bg-gray-400 hover:bg-gray-500' : 'flex-1 bg-blue-600 hover:bg-blue-700'
-                }`}
+            onClick={() => genererProchainExercice()}
+            className={`flex-1 py-3 text-white font-bold rounded-lg shadow-md transition-colors active:scale-95 text-sm sm:text-base ${
+              mode === 'test' && !revelerSolution ? 'bg-gray-400 hover:bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            Lettre suivante
+            Suivant
           </button>
         </div>
+
       </main>
     </div>
   );
