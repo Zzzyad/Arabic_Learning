@@ -69,11 +69,6 @@ const DrawingBoard = forwardRef(({ children }, ref) => {
   return (
     // J'ai retiré le flex-col et le bouton Effacer. Le composant n'est plus QUE le canvas.
     <div className="w-full h-80 relative bg-white border-2 border-gray-300 rounded-xl overflow-hidden shadow-inner">
-      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-0 opacity-60">
-        <div className="w-full border-t border-dashed border-gray-300 mb-10"></div>
-        <div className="w-full border-t-[2px] border-red-300"></div>
-        <div className="w-full border-t border-dashed border-gray-300 mt-10"></div>
-      </div>
 
       {children}
 

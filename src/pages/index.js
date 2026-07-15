@@ -147,24 +147,50 @@ export default function Home() {
           </div>
         )}
 
+        {/* Zone de dessin */}
         <div className="w-full max-w-lg mx-auto">
-          {/* On passe la référence au DrawingBoard ici */}
           <DrawingBoard ref={drawingBoardRef} key={`${lettreActuelle?.id}-${formeActuelle}-${mode}`}>
-            {lettreActuelle && (
-              <div 
-                className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${
-                  mode === 'calque' ? 'opacity-25' : revelerSolution ? 'opacity-60' : 'opacity-0'
-                }`}
-              >
-                <span 
-                  className={`pb-10 ${revelerSolution && mode === 'test' ? 'text-green-500 font-bold' : 'text-[#1f2937]'}`} 
-                  style={{ fontSize: '180px', lineHeight: '1' }}
-                  dir="rtl"
-                >
-                  {lettreActuelle.formes[formeActuelle]}
-                </span>
+            
+            {/* CONTENEUR SYNCHRONISÉ : GRILLE + LETTRE */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
+              
+              {/* Boîte typographique fixe (180px de haut) pour verrouiller la position */}
+              <div className="relative w-full flex justify-center items-center h-[180px]">
+                
+                {/* 1. LA GRILLE DU CAHIER (Liée à la typographie) */}
+                <div className="absolute inset-0 w-full z-10 opacity-60">
+                   {/* Ligne haute (Pour limiter les ascendants comme le Alif) */}
+                   <div className="absolute top-[15%] w-full border-t border-dashed border-gray-400"></div> 
+                   
+                   {/* LIGNE DE BASE ROUGE - Calée mathématiquement à 72% de la hauteur */}
+                   <div className="absolute top-[72%] w-full border-t-[2px] border-red-400 shadow-sm"></div> 
+                   
+                   {/* Ligne basse (Pour limiter les descendants comme le Jîm ou le Mîm) */}
+                   <div className="absolute top-[110%] w-full border-t border-dashed border-gray-400"></div> 
+                </div>
+
+                {/* 2. LA LETTRE */}
+                {lettreActuelle && (
+                  <span 
+                    className={`relative z-20 ${
+                      mode === 'calque' ? 'opacity-25' : revelerSolution ? 'opacity-65' : 'opacity-0'
+                    } ${
+                      revelerSolution && mode === 'test' ? 'text-green-500 font-bold' : 'text-[#1f2937]'
+                    }`} 
+                    style={{ 
+                      fontSize: '180px', 
+                      lineHeight: '180px', // Crucial : Force la lettre à remplir exactement les 180px
+                      display: 'inline-block' 
+                    }}
+                    dir="rtl"
+                  >
+                    {lettreActuelle.formes[formeActuelle]}
+                  </span>
+                )}
+                
               </div>
-            )}
+            </div>
+
           </DrawingBoard>
         </div>
 
