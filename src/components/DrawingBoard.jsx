@@ -18,8 +18,10 @@ const DrawingBoard = forwardRef(({ children }, ref) => {
 
   const getCoordinates = (canvas, e) => {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    const isTouch = e.touches && e.touches.length > 0;
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
     return {
       x: clientX - rect.left,
       y: clientY - rect.top
@@ -33,7 +35,7 @@ const DrawingBoard = forwardRef(({ children }, ref) => {
     const { x, y } = getCoordinates(canvas, e);
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x, y);
+    ctx.lineTo(x, y + 0.001);
     ctx.stroke();
   };
 
