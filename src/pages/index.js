@@ -2,6 +2,14 @@
 import { useState, useEffect, useRef } from 'react';
 import DrawingBoard from '@/components/DrawingBoard';
 import alphabetData from '../../data/alphabet.json'; 
+import { Noto_Naskh_Arabic } from 'next/font/google'; 
+
+// Configuration de la police avec un chargement optimisé
+const notoArabic = Noto_Naskh_Arabic({ 
+  subsets: ['arabic'], 
+  weight: ['400', '700'],
+  display: 'swap',
+});
 
 export default function Home() {
   const [vueActuelle, setVueActuelle] = useState('grille');
@@ -151,35 +159,32 @@ export default function Home() {
         <div className="w-full max-w-lg mx-auto">
           <DrawingBoard ref={drawingBoardRef} key={`${lettreActuelle?.id}-${formeActuelle}-${mode}`}>
             
-            {/* CONTENEUR SYNCHRONISÉ : GRILLE + LETTRE */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
               
-              {/* Boîte typographique fixe (180px de haut) pour verrouiller la position */}
               <div className="relative w-full flex justify-center items-center h-[180px]">
                 
-                {/* 1. LA GRILLE DU CAHIER (Liée à la typographie) */}
+                {/* 1. LA GRILLE DU CAHIER */}
                 <div className="absolute inset-0 w-full z-10 opacity-60">
-                   {/* Ligne haute (Pour limiter les ascendants comme le Alif) */}
-                   <div className="absolute top-[15%] w-full border-t border-dashed border-gray-400"></div> 
+                   <div className="absolute top-[20%] w-full border-t border-dashed border-gray-400"></div> 
                    
-                   {/* LIGNE DE BASE ROUGE - Calée mathématiquement à 72% de la hauteur */}
-                   <div className="absolute top-[72%] w-full border-t-[2px] border-red-400 shadow-sm"></div> 
+                   {/* LA LIGNE ROUGE : Avec Noto Naskh, la ligne de base est parfaitement calée autour de 67% */}
+                   <div className="absolute top-[67%] w-full border-t-[2px] border-red-400 shadow-sm"></div> 
                    
-                   {/* Ligne basse (Pour limiter les descendants comme le Jîm ou le Mîm) */}
-                   <div className="absolute top-[110%] w-full border-t border-dashed border-gray-400"></div> 
+                   <div className="absolute top-[95%] w-full border-t border-dashed border-gray-400"></div> 
                 </div>
 
                 {/* 2. LA LETTRE */}
                 {lettreActuelle && (
                   <span 
-                    className={`relative z-20 ${
+                    // Ajout de notoArabic.className pour forcer la typographie stricte
+                    className={`${notoArabic.className} relative z-20 ${
                       mode === 'calque' ? 'opacity-25' : revelerSolution ? 'opacity-65' : 'opacity-0'
                     } ${
                       revelerSolution && mode === 'test' ? 'text-green-500 font-bold' : 'text-[#1f2937]'
                     }`} 
                     style={{ 
                       fontSize: '180px', 
-                      lineHeight: '180px', // Crucial : Force la lettre à remplir exactement les 180px
+                      lineHeight: '180px', 
                       display: 'inline-block' 
                     }}
                     dir="rtl"
